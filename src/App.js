@@ -1,37 +1,75 @@
-import React, { useEffect, useState } from 'react';
-import { Container, Grid, Card, CardContent, Typography } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import {
+  Table,
+  TableContainer,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  Paper,
+  styled,
+} from '@mui/material';
+
+const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
+  margin: 'auto',
+  maxWidth: '100%',
+  padding: theme.spacing(2),
+  '@media (max-width: 1300px)': {
+    padding: theme.spacing(1),
+  },
+}));
+
+const StyledTable = styled(Table)({
+  minWidth: 500,
+  '@media (max-width: 1300px)': {
+    minWidth: 'auto',
+  },
+});
 
 function App() {
   const [notes, setNotes] = useState([]);
 
   useEffect(() => {
-    fetch('https://api.gyanibooks.com/library/get_dummy_notes')
-      .then(response => response.json())
-      .then(data => setNotes(data))
-      .catch(error => console.log(error));
+    fetchNotes();
   }, []);
 
-  const parseNotesContent = (content) => {
-    if (!content) return '';
-    const parsedContent = JSON.parse(content);
-    const paragraphs = parsedContent.content.filter(block => block.type === 'paragraph');
-    const texts = paragraphs.map(paragraph => paragraph.content.map(text => text.text).join(''));
-    return texts.join('\n');
+  const fetchNotes = async () => {
+    try {
+      const response = await axios.get(
+        'https://api.gyanibooks.com/library/get_dummy_notes'
+      );
+      setNotes(response.data);
+    } catch (error) {
+      console.error('Error fetching notes:', error);
+    }
   };
 
   return (
-    <Container>
-      <Typography variant="h2" gutterBottom>
-        Dummy Notes
-      </Typography>
-      {notes.map(note => (
-        <div key={note.id}>
-          <Typography variant="h4">{note.title}</Typography>
-          <Typography variant="subtitle1">{note.category}</Typography>
-          <Typography variant="body1">{parseNotesContent(note.notes)}</Typography>
-        </div>
-      ))}
-    </Container>
+    <StyledTableContainer component={Paper}>
+      <StyledTable>
+        <TableHead>
+          <TableRow>
+            <TableCell>ID</TableCell>
+            <TableCell>User</TableCell>
+            <TableCell>Title</TableCell>
+            <TableCell>Category</TableCell>
+            <TableCell>Notes</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {notes.map((note) => (
+            <TableRow key={note.id}>
+              <TableCell>{note.id}</TableCell>
+              <TableCell>{note.user}</TableCell>
+              <TableCell>{note.title}</TableCell>
+              <TableCell>{note.category}</TableCell>
+              <TableCell>{note.notes}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </StyledTable>
+    </StyledTableContainer>
   );
 }
 
